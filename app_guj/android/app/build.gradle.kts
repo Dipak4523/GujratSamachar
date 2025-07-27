@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.app_guj"
-    compileSdk = 34 // Updated to latest stable
+    compileSdk = 35 // Updated to latest stable
     ndkVersion = "27.0.12077973" // Set to required NDK version for plugins
 
     compileOptions {
@@ -26,7 +26,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 34 // Updated to latest stable
+        targetSdk = 35 // Updated to latest stable
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

@@ -30,7 +30,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   void _playCurrentNews() {
     final ttsService = Provider.of<TtsService>(context, listen: false);
     // Always set the language before speaking
-    ttsService.setLanguage(ttsService.language);
+   // ttsService.setLanguage(ttsService.language);
+    ttsService.setLanguage("gu-IN");
     ttsService.speak(widget.newsList[_currentIndex].description);
   }
 
