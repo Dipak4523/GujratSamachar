@@ -6,9 +6,6 @@ import 'package:provider/provider.dart';
 import '../services/news_api_service.dart';
 import '../models/news_model.dart';
 import '../services/tts_service.dart';
-import 'package:audio_waveforms/audio_waveforms.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -22,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late Future<List<NewsModel>> _newsFuture;
   late TabController _tabController;
-  final List<String> _categories = ['Top News', 'Sports', 'Entertainment', 'Technology', 'YouTube'];
+  final List<String> _categories = ['Top News', 'Sports', 'Entertainment', 'Technology','Thanks'];
 
   @override
   void initState() {
@@ -45,66 +42,77 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final ttsService = Provider.of<TtsService>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('E-News'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
-          ),
-        ],
+        title: Text("E-News"),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: _categories.map((cat) => Tab(text: cat)).toList(),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Top News
-          _buildNewsList(ttsService),
-          // Sports
-          _buildNewsList(ttsService),
-          // Entertainment
-          _buildNewsList(ttsService),
-          // Technology
-          _buildNewsList(ttsService),
-          // YouTube
-          _buildYouTubeSection(),
-        ],
+      body: FutureBuilder<List<NewsModel>>(
+        future: _newsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: \\${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No news available.'));
+          }
+          final newsList = snapshot.data!;
+          // Split news into unique sections for each category (simulate unique items)
+          int chunkSize = (newsList.length / (_categories.length - 1)).ceil();
+          List<List<NewsModel>> categoryChunks = [];
+          for (int i = 0; i < _categories.length - 1; i++) {
+            int start = i * chunkSize;
+            int end = start + chunkSize;
+            if (start >= newsList.length) {
+              categoryChunks.add([]);
+            } else {
+              categoryChunks.add(newsList.sublist(start, end > newsList.length ? newsList.length : end));
+            }
+          }
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              for (int i = 0; i < _categories.length - 1; i++)
+                _buildNewsList(ttsService, categoryChunks[i]),
+              Container(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Thank You',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildNewsList(TtsService ttsService) {
-    return FutureBuilder<List<NewsModel>>(
-      future: _newsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: \\${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No news available.'));
-        }
-        final newsList = snapshot.data!;
-        return ListView.builder(
-          itemCount: newsList.length,
-          itemBuilder: (context, index) {
-            final news = newsList[index];
-            bool isPlaying = ttsService.isPlaying;
-            return ListTile(
-              title: Text(news.title),
-              subtitle: Text(news.description, maxLines: 2, overflow: TextOverflow.ellipsis),
-              trailing: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-              onTap: () async {
-                showDialog(
-                  context: context,
-                  builder: (context) => _MediaPlayerDialog(text: news.title + '\n' + news.description),
-                );
-              },
+  Widget _buildNewsList(TtsService ttsService, List<NewsModel> newsList) {
+    if (newsList.isEmpty) {
+      return const Center(child: Text('No news available.'));
+    }
+    return ListView.builder(
+      itemCount: newsList.length,
+      itemBuilder: (context, index) {
+        final news = newsList[index];
+        bool isPlaying = ttsService.isPlaying;
+        return ListTile(
+          title: Text(news.title),
+          subtitle: Text(news.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+          trailing: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+          onTap: () async {
+            showDialog(
+              context: context,
+              builder: (context) => _MediaPlayerDialog(text: news.title + '\n' + news.description),
             );
           },
         );
@@ -115,10 +123,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildYouTubeSection() {
     final List<Map<String, String>> youtubeVideos = [
       {
-        'title': 'Times of India Gujarati News Live',
-        'url': 'https://www.youtube.com/watch?v=QH2-TGUlwu4',
-        'thumbnail': 'https://img.youtube.com/vi/QH2-TGUlwu4/0.jpg',
+        "title": "AI Demo Video",
+        "url": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4",
+        "thumbnail": "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg"
       },
+      {
+        "title": "AI Feature Preview",
+        "url": "https://sample-videos.com/video123/mp4/720/sample_960x400_ocean.mp4",
+        "thumbnail": "https://sample-videos.com/img/Sample-jpg-image-500kb.jpg"
+      }
       // ...add more Times of India or other Gujarati news videos as needed...
     ];
     return ListView.builder(
@@ -126,7 +139,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       itemBuilder: (context, index) {
         final video = youtubeVideos[index];
         return ListTile(
-          leading: Image.network(video['thumbnail']!, width: 64, height: 48, fit: BoxFit.cover),
+          leading: Image.network(
+              video['thumbnail']!,
+              width: 64, height: 48,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.error, size: 48),
+              fit: BoxFit.cover),
           title: Text(video['title']!),
           trailing: const Icon(Icons.play_circle_fill, color: Colors.red),
           onTap: () async {
@@ -156,9 +173,8 @@ class _YouTubePlayerDialogState extends State<_YouTubePlayerDialog> {
   @override
   void initState() {
     super.initState();
-    // Use a sample video for demo, or use a package like youtube_player_flutter for real YouTube playback
-    String videoUrl = 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4';
-    _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
+    // Use the actual YouTube video URL for the selected video
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
         setState(() {
           _isInitialized = true;
@@ -291,7 +307,14 @@ class _MediaPlayerDialogState extends State<_MediaPlayerDialog> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 32),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () async {
+                    if (isPlaying) {
+                      await _stop();
+                    } else {
+                      await _speak();
+                    }
+                    Navigator.of(context).pop();
+                  },
                 ),
               ],
             ),
