@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.app_guj"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 34 // Updated to latest stable
+    ndkVersion = "27.0.12077973" // Set to required NDK version for plugins
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -17,6 +17,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+        freeCompilerArgs = listOf("-Xjvm-default=all")
     }
 
     defaultConfig {
@@ -25,7 +26,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34 // Updated to latest stable
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
